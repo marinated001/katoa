@@ -1,0 +1,6 @@
+name: Katoa
+main: io.github.marinatedd.katoa.Katoa
+version: 1.0.0
+commands:
+   paintfloor:
+      description: Paints the floor.
