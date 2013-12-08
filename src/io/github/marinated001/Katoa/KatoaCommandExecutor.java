@@ -11,6 +11,7 @@ public class KatoaCommandExecutor implements CommandExecutor
 	// =============================================================================================
 	private Katoa	plugin;
 	private boolean	painting	= false;
+	private int		paintMode	= 0;		// 0: clay; 1: wool
 
 	private static enum RootCommand {
 		paint
@@ -76,11 +77,26 @@ public class KatoaCommandExecutor implements CommandExecutor
 			return;
 		}
 
-		painting = !painting;
-
-		if (painting)
-			player.sendMessage(ChatColor.GREEN + "true");
+		if (args[1].equalsIgnoreCase("clay"))
+			this.paintMode = 0;
+		else if (args[1].equalsIgnoreCase("wool"))
+			this.paintMode = 1;
 		else
+		{
+			this.printUse(player, RootCommand.paint);
+			return;
+		}
+
+		this.painting = !this.painting;
+
+		if (this.painting)
+		{
+
+			player.sendMessage(ChatColor.GREEN + "true: "
+					+ String.valueOf(paintMode));
+
+			// Do stuff...
+		} else
 			player.sendMessage(ChatColor.RED + "false");
 
 	}
