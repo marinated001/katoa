@@ -1,5 +1,6 @@
 package io.github.marinated001.Katoa;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -9,6 +10,7 @@ public class KatoaCommandExecutor implements CommandExecutor
 {
 	// =============================================================================================
 	private Katoa	plugin;
+	private boolean	painting	= false;
 
 	private static enum RootCommand {
 		paint
@@ -66,14 +68,21 @@ public class KatoaCommandExecutor implements CommandExecutor
 
 	// ###################################################################################################################################
 	private void executePaint(String[] args, Player player) {
-		//katoa paint [clay/wool]
-		
+		// katoa paint [clay/wool]
+
 		if (args.length < 2)
 		{
 			this.printUse(player, RootCommand.paint);
 			return;
 		}
-		
+
+		painting = !painting;
+
+		if (painting)
+			player.sendMessage(ChatColor.GREEN + "true");
+		else
+			player.sendMessage(ChatColor.RED + "false");
+
 	}
 
 	// ###################################################################################################################################
@@ -93,7 +102,9 @@ public class KatoaCommandExecutor implements CommandExecutor
 		switch (command)
 		{
 		case paint:
-			plugin.getLog().sendPlayerWarn(player, "Usage: /kaota paint [clay/wool] - toggles floor painting.");
+			plugin.getLog()
+					.sendPlayerWarn(player,
+							"Usage: /kaota paint [clay/wool] - toggles floor painting.");
 			break;
 		}
 	}
