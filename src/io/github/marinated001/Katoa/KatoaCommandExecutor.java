@@ -3,7 +3,6 @@ package io.github.marinated001.Katoa;
 import io.github.marinated001.Katoa.Player.KatoaPlayer;
 import io.github.marinated001.Katoa.Player.KatoaPlayerManager;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -71,7 +70,7 @@ public class KatoaCommandExecutor implements CommandExecutor
 
 	// ###################################################################################################################################
 	private void executePaint(String[] args, Player player) {
-		// /katoa paint [clay/wool/stop]
+		// /katoa paint [clay/wool/stop/undo]
 
 		if (args.length < 2)
 		{
@@ -94,19 +93,50 @@ public class KatoaCommandExecutor implements CommandExecutor
 			{
 				int paintMode = 0;
 				kp.getPaint().schedule(paintMode);
-				player.sendMessage(ChatColor.GREEN + "Painting enabled [mode: "
-						+ String.valueOf(paintMode) + "]");
+				plugin.getLog().sendPlayerNormal(
+						kp.getPlayer(),
+						"Painting enabled [mode: " + String.valueOf(paintMode)
+								+ "]");
 			} else if (args[1].equalsIgnoreCase("wool"))
 			{
 				int paintMode = 1;
 				kp.getPaint().schedule(paintMode);
-				player.sendMessage(ChatColor.GREEN + "Painting enabled [mode: "
-						+ String.valueOf(paintMode) + "]");
+				plugin.getLog().sendPlayerNormal(
+						kp.getPlayer(),
+						"Painting enabled [mode: " + String.valueOf(paintMode)
+								+ "]");
 
 			} else if (args[1].equalsIgnoreCase("stop"))
 			{
 				plugin.getLog().sendPlayerWarn(player,
 						"You are not currently painting!");
+			} else if (args[1].equalsIgnoreCase("undo"))
+			{
+				kp.getPaint().undo();
+				plugin.getLog().sendPlayerNormal(kp.getPlayer(),
+						"Painting undone");
+			} else if (args[1].equalsIgnoreCase("radius"))
+			{
+				try
+				{
+					int r = Integer.parseInt(args[2]);
+
+					if (r <= 0)
+					{
+						plugin.getLog().sendPlayerWarn(kp.getPlayer(),
+								"Radius must be a positive integer");
+						return;
+					}
+
+					kp.getPaint().setRadius(r);
+					plugin.getLog().sendPlayerNormal(kp.getPlayer(),
+							"Brush radius set to " + r);
+
+				} catch (Exception e)
+				{
+					plugin.getLog().sendPlayerWarn(kp.getPlayer(),
+							"/katoa paint radius [#]");
+				}
 			} else
 				printUse(player, RootCommand.paint);
 		} else
@@ -120,7 +150,23 @@ public class KatoaCommandExecutor implements CommandExecutor
 			else if (args[1].equalsIgnoreCase("stop"))
 			{
 				kp.getPaint().cancel();
-				player.sendMessage(ChatColor.RED + "Painting disabled");
+				plugin.getLog().sendPlayerNormal(kp.getPlayer(),
+						"Painting disabled");
+			} else if (args[1].equalsIgnoreCase("undo"))
+			{
+				plugin.getLog().sendPlayerWarn(player,
+						"You are already painting!");
+			} else if (args[1].equalsIgnoreCase("radius"))
+			{
+				try
+				{
+					int r = Integer.parseInt(args[2]);
+					kp.getPaint().setRadius(r);
+				} catch (Exception e)
+				{
+					plugin.getLog().sendPlayerWarn(kp.getPlayer(),
+							"/katoa paint radius [#]");
+				}
 			} else
 				printUse(player, RootCommand.paint);
 		}
@@ -145,7 +191,7 @@ public class KatoaCommandExecutor implements CommandExecutor
 		{
 		case paint:
 			plugin.getLog().sendPlayerWarn(player,
-					"Usage: /kaota paint [clay/wool/stop]");
+					"Usage: /kaota paint [clay/wool/stop/radius]");
 			break;
 		}
 	}

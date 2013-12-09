@@ -4,6 +4,7 @@ import io.github.marinated001.Katoa.Katoa;
 import io.github.marinated001.Katoa.Player.KatoaPlayer;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
@@ -17,12 +18,17 @@ public class KatoaPaint
 {
 	private int							mode;
 	private int							taskid			= -1;
+	private int							radius			= 1;
 	private KatoaPlayer					kp;
 	private Server						server			= Bukkit.getServer();
 	private HashMap<Location, Material>	blocksChanged	= new HashMap<Location, Material>();
 
 	public KatoaPaint(KatoaPlayer p) {
 		this.kp = p;
+	}
+
+	public void setRadius(int r) {
+		this.radius = r;
 	}
 
 	public void schedule(int mode) {
@@ -47,27 +53,65 @@ public class KatoaPaint
 	}
 
 	public void undo() {
+		for (Entry<Location, Material> e : blocksChanged.entrySet())
+		{
+			e.getKey().getBlock().setType(e.getValue());
+		}
 
+		blocksChanged.clear();
 	}
 
 	@SuppressWarnings("deprecation")
 	public void paint() {
-		Block b = kp.getPlayer().getLocation().getBlock().getRelative(0, -1, 0);
 
-		if (b.getType() == null)
+		Block center = kp.getPlayer().getLocation().getBlock().getRelative(0,
+				-1, 0);
+
+		if (center.getType() == Material.AIR)
 			return;
 
-		addToTracker(b.getLocation(), b.getType());
-		if (mode == 0)
-		{
-			b.setType(Material.STAINED_CLAY);
+		int half = Math.round(radius / 2);
 
-		} else if (mode == 1)
+		if (half <= 0)
 		{
-			b.setType(Material.WOOL);
+			Block b = center;
+
+			addToTracker(b.getLocation(), b.getType());
+			if (mode == 0)
+			{
+				b.setType(Material.STAINED_CLAY);
+
+			} else if (mode == 1)
+			{
+				b.setType(Material.WOOL);
+			}
+
+			b.setData(getRandomDyeColor().getData());
 		}
 
-		b.setData(getRandomDyeColor().getData());
+		for (int xoffset = -half; xoffset < half; xoffset++)
+		{
+			for (int zoffset = -half; zoffset < half; zoffset++)
+			{
+				Block b = center.getLocation().subtract(xoffset, 0, zoffset)
+						.getBlock();
+				if (b.getType() == Material.AIR)
+					return;
+
+				addToTracker(b.getLocation(), b.getType());
+				if (mode == 0)
+				{
+					b.setType(Material.STAINED_CLAY);
+
+				} else if (mode == 1)
+				{
+					b.setType(Material.WOOL);
+				}
+
+				b.setData(getRandomDyeColor().getData());
+			}
+		}
+
 	}
 
 	private void addToTracker(Location loc, Material old) {
