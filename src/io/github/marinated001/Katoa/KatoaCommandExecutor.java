@@ -1,6 +1,7 @@
 package io.github.marinated001.Katoa;
 
-import io.github.marinated001.Katoa.Module.KatoaPaint;
+import io.github.marinated001.Katoa.Player.KatoaPlayer;
+import io.github.marinated001.Katoa.Player.KatoaPlayerManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -11,17 +12,14 @@ import org.bukkit.entity.Player;
 public class KatoaCommandExecutor implements CommandExecutor
 {
 	// =============================================================================================
-	private Katoa		plugin;
-	private KatoaPaint	paint;
-	private boolean		painting	= false;
-	private int			paintMode	= 0;		// 0: clay; 1: wool
+	private Katoa	plugin;
 
 	private static enum RootCommand {
 		paint
 	}
 
 	public KatoaCommandExecutor(Katoa instance) {
-		this.plugin = instance;
+		plugin = instance;
 	}
 
 	// =============================================================================================
@@ -44,12 +42,12 @@ public class KatoaCommandExecutor implements CommandExecutor
 		Player player = (Player) sender;
 
 		// Grab root command
-		RootCommand rootCommand = this.getRootCommand(args[0].toLowerCase());
+		RootCommand rootCommand = getRootCommand(args[0].toLowerCase());
 
 		// Execute the command
 		if (rootCommand != null)
 		{
-			this.execute(rootCommand, args, player);
+			execute(rootCommand, args, player);
 			return true;
 		} else
 			return false;
@@ -63,7 +61,7 @@ public class KatoaCommandExecutor implements CommandExecutor
 		switch (rootCommand)
 		{
 		case paint:
-			this.executePaint(args, player);
+			executePaint(args, player);
 			break;
 		}
 
@@ -75,28 +73,33 @@ public class KatoaCommandExecutor implements CommandExecutor
 	private void executePaint(String[] args, Player player) {
 		// /katoa paint [clay/wool/stop]
 
-		this.paint = new KatoaPaint(paintMode, player, plugin);
-
 		if (args.length < 2)
 		{
-			this.printUse(player, RootCommand.paint);
+			printUse(player, RootCommand.paint);
 			return;
 		}
 
-		if (!this.painting)
+		KatoaPlayer kp = KatoaPlayerManager.getKatoaPlayer(player);
+
+		if (kp == null)
+		{
+			plugin.getLog().sendPlayerWarn(player,
+					"An error has occured, please try relogging.");
+			return;
+		}
+
+		if (!kp.getPaint().isPainting())
 		{
 			if (args[1].equalsIgnoreCase("clay"))
 			{
-				this.painting = true;
-				this.paintMode = 0;
-				paint.schedule();
+				int paintMode = 0;
+				kp.getPaint().schedule(paintMode);
 				player.sendMessage(ChatColor.GREEN + "Painting enabled [mode: "
 						+ String.valueOf(paintMode) + "]");
 			} else if (args[1].equalsIgnoreCase("wool"))
 			{
-				this.painting = true;
-				this.paintMode = 1;
-				paint.schedule();
+				int paintMode = 1;
+				kp.getPaint().schedule(paintMode);
 				player.sendMessage(ChatColor.GREEN + "Painting enabled [mode: "
 						+ String.valueOf(paintMode) + "]");
 
@@ -105,7 +108,7 @@ public class KatoaCommandExecutor implements CommandExecutor
 				plugin.getLog().sendPlayerWarn(player,
 						"You are not currently painting!");
 			} else
-				this.printUse(player, RootCommand.paint);
+				printUse(player, RootCommand.paint);
 		} else
 		{
 			if (args[1].equalsIgnoreCase("clay"))
@@ -116,11 +119,10 @@ public class KatoaCommandExecutor implements CommandExecutor
 						"You are already painting!");
 			else if (args[1].equalsIgnoreCase("stop"))
 			{
-				this.painting = false;
-				this.paint.cancel();
+				kp.getPaint().cancel();
 				player.sendMessage(ChatColor.RED + "Painting disabled");
 			} else
-				this.printUse(player, RootCommand.paint);
+				printUse(player, RootCommand.paint);
 		}
 
 	}

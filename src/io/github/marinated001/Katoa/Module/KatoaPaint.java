@@ -1,46 +1,83 @@
 package io.github.marinated001.Katoa.Module;
 
+import io.github.marinated001.Katoa.Katoa;
+import io.github.marinated001.Katoa.Player.KatoaPlayer;
+
+import java.util.HashMap;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.block.Block;
 
 public class KatoaPaint
 {
-	private int		mode;
-	private Player	player;
-	private Server	server	= Bukkit.getServer();
-	private Plugin	plugin;
-	private int		taskid;
+	private int							mode;
+	private int							taskid			= -1;
+	private KatoaPlayer					kp;
+	private Server						server			= Bukkit.getServer();
+	private HashMap<Location, Material>	blocksChanged	= new HashMap<Location, Material>();
 
-	public KatoaPaint(int m, Player p, Plugin plugin) {
-		this.mode = m;
-		this.player = p;
-		this.plugin = plugin;
+	public KatoaPaint(KatoaPlayer p) {
+		this.kp = p;
 	}
 
-	public void schedule() {
+	public void schedule(int mode) {
+		this.mode = mode;
 
-		this.taskid = server.getScheduler().scheduleSyncRepeatingTask(plugin,
-				new Runnable() {
-			
+		this.taskid = server.getScheduler().scheduleSyncRepeatingTask(
+				Katoa.getInstance(), new Runnable() {
+
 					@Override
 					public void run() {
+						if (kp.getPlayer() == null)
+							return;
 						paint();
 					}
-					
-				}, 0L, 20L);
+
+				}, 0L, 2L);
 	}
 
 	public void cancel() {
 		server.getScheduler().cancelTask(this.taskid);
+		this.taskid = -1;
 	}
 
+	public void undo() {
+
+	}
+
+	@SuppressWarnings("deprecation")
 	public void paint() {
-		player.sendMessage("ping");
+		Block b = kp.getPlayer().getLocation().getBlock().getRelative(0, -1, 0);
+
+		if (b.getType() == null)
+			return;
+
+		addToTracker(b.getLocation(), b.getType());
+		if (mode == 0)
+		{
+			b.setType(Material.STAINED_CLAY);
+
+		} else if (mode == 1)
+		{
+			b.setType(Material.WOOL);
+		}
+
+		b.setData(getRandomDyeColor().getData());
+	}
+
+	private void addToTracker(Location loc, Material old) {
+		if (blocksChanged.containsKey(loc))
+			return;
+		blocksChanged.put(loc, old);
+	}
+
+	public boolean isPainting() {
+		return this.taskid != -1;
 	}
 
 	public DyeColor getRandomDyeColor() {
