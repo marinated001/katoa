@@ -1,5 +1,7 @@
 package io.github.marinated001.Katoa;
 
+import io.github.marinated001.Katoa.Module.KatoaPaint;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -9,9 +11,10 @@ import org.bukkit.entity.Player;
 public class KatoaCommandExecutor implements CommandExecutor
 {
 	// =============================================================================================
-	private Katoa	plugin;
-	private boolean	painting	= false;
-	private int		paintMode	= 0;		// 0: clay; 1: wool
+	private Katoa		plugin;
+	private KatoaPaint	paint;
+	private boolean		painting	= false;
+	private int			paintMode	= 0;		// 0: clay; 1: wool
 
 	private static enum RootCommand {
 		paint
@@ -29,7 +32,7 @@ public class KatoaCommandExecutor implements CommandExecutor
 		// Make sure command was not sent from console
 		if (sender instanceof Player == false)
 		{
-			plugin.getLogger().info("/katoa is only available in game.");
+			plugin.getLog().info("/katoa is only available in game.");
 			return true;
 		}
 
@@ -63,13 +66,16 @@ public class KatoaCommandExecutor implements CommandExecutor
 			this.executePaint(args, player);
 			break;
 		}
+
 	}
 
 	// ###################################################################################################################################
 
 	// ###################################################################################################################################
 	private void executePaint(String[] args, Player player) {
-		// katoa paint [clay/wool]
+		// /katoa paint [clay/wool/stop]
+
+		this.paint = new KatoaPaint(paintMode, player, plugin);
 
 		if (args.length < 2)
 		{
@@ -77,27 +83,45 @@ public class KatoaCommandExecutor implements CommandExecutor
 			return;
 		}
 
-		if (args[1].equalsIgnoreCase("clay"))
-			this.paintMode = 0;
-		else if (args[1].equalsIgnoreCase("wool"))
-			this.paintMode = 1;
-		else
+		if (!this.painting)
 		{
-			this.printUse(player, RootCommand.paint);
-			return;
-		}
+			if (args[1].equalsIgnoreCase("clay"))
+			{
+				this.painting = true;
+				this.paintMode = 0;
+				paint.schedule();
+				player.sendMessage(ChatColor.GREEN + "Painting enabled [mode: "
+						+ String.valueOf(paintMode) + "]");
+			} else if (args[1].equalsIgnoreCase("wool"))
+			{
+				this.painting = true;
+				this.paintMode = 1;
+				paint.schedule();
+				player.sendMessage(ChatColor.GREEN + "Painting enabled [mode: "
+						+ String.valueOf(paintMode) + "]");
 
-		this.painting = !this.painting;
-
-		if (this.painting)
-		{
-
-			player.sendMessage(ChatColor.GREEN + "true: "
-					+ String.valueOf(paintMode));
-
-			// Do stuff...
+			} else if (args[1].equalsIgnoreCase("stop"))
+			{
+				plugin.getLog().sendPlayerWarn(player,
+						"You are not currently painting!");
+			} else
+				this.printUse(player, RootCommand.paint);
 		} else
-			player.sendMessage(ChatColor.RED + "false");
+		{
+			if (args[1].equalsIgnoreCase("clay"))
+				plugin.getLog().sendPlayerWarn(player,
+						"You are already painting!");
+			else if (args[1].equalsIgnoreCase("wool"))
+				plugin.getLog().sendPlayerWarn(player,
+						"You are already painting!");
+			else if (args[1].equalsIgnoreCase("stop"))
+			{
+				this.painting = false;
+				this.paint.cancel();
+				player.sendMessage(ChatColor.RED + "Painting disabled");
+			} else
+				this.printUse(player, RootCommand.paint);
+		}
 
 	}
 
@@ -118,9 +142,8 @@ public class KatoaCommandExecutor implements CommandExecutor
 		switch (command)
 		{
 		case paint:
-			plugin.getLog()
-					.sendPlayerWarn(player,
-							"Usage: /kaota paint [clay/wool] - toggles floor painting.");
+			plugin.getLog().sendPlayerWarn(player,
+					"Usage: /kaota paint [clay/wool/stop]");
 			break;
 		}
 	}
