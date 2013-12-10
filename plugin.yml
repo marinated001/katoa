@@ -4,4 +4,11 @@ version: 1.0.0
 commands:
    katoa:
       description: Root command.
-      usage: /katoa [paint] 
+      usage: /katoa [launchpad/paint] 
+permissions:
+    katoa.*:
+        description: Gives access to all katoa commands
+        children:
+            katoa.paint: true
+    katoa.paint:
+        description: Allows you to paint the floor

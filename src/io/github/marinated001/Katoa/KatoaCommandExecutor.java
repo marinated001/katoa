@@ -3,6 +3,8 @@ package io.github.marinated001.Katoa;
 import io.github.marinated001.Katoa.Player.KatoaPlayer;
 import io.github.marinated001.Katoa.Player.KatoaPlayerManager;
 
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,7 +16,7 @@ public class KatoaCommandExecutor implements CommandExecutor
 	private Katoa	plugin;
 
 	private static enum RootCommand {
-		paint
+		paint, launchpad
 	}
 
 	public KatoaCommandExecutor(Katoa instance) {
@@ -40,6 +42,13 @@ public class KatoaCommandExecutor implements CommandExecutor
 		// Convert sender to player
 		Player player = (Player) sender;
 
+		// Verify player permission
+		if (!player.hasPermission("katoa.paint"))
+		{
+			plugin.getLog().sendPlayerWarnPerm(player);
+			return true;
+		}
+
 		// Grab root command
 		RootCommand rootCommand = getRootCommand(args[0].toLowerCase());
 
@@ -62,6 +71,9 @@ public class KatoaCommandExecutor implements CommandExecutor
 		case paint:
 			executePaint(args, player);
 			break;
+		case launchpad:
+			executeLaunchpad(args, player);
+			break;
 		}
 
 	}
@@ -71,6 +83,8 @@ public class KatoaCommandExecutor implements CommandExecutor
 	// ###################################################################################################################################
 	private void executePaint(String[] args, Player player) {
 		// /katoa paint [clay/wool/stop/undo]
+
+		// TODO Make paintMode an enum
 
 		if (args.length < 2)
 		{
@@ -173,6 +187,57 @@ public class KatoaCommandExecutor implements CommandExecutor
 
 	}
 
+	private void executeLaunchpad(String[] args, Player player) {
+		// /katoa launchpad [add/remove/list]
+
+		if (args.length < 2)
+		{
+			printUse(player, RootCommand.launchpad);
+			return;
+		}
+
+		KatoaPlayer kp = KatoaPlayerManager.getKatoaPlayer(player);
+
+		if (kp == null)
+		{
+			plugin.getLog().sendPlayerWarn(player,
+					"An error has occured, please try relogging.");
+			return;
+		}
+
+		if (args[1].equalsIgnoreCase("add"))
+		{
+			kp.getLaunchpad().addLaunchpad(
+					kp,
+					kp.getPlayer().getWorld().getName(),
+					kp.getPlayer().getLocation().getBlock().getRelative(0, -1,
+							0).getLocation());
+		} else if (args[1].equalsIgnoreCase("remove"))
+		{
+			if (kp.getPlayer().getTargetBlock(null, 10).getType() != Material.REDSTONE_BLOCK)
+			{
+				plugin.getLog()
+						.sendPlayerWarn(kp.getPlayer(),
+								"Could not find launchpad! Look at the launchpad, then try again.");
+				return;
+			}
+
+			kp.getLaunchpad().removeLaunchpad(
+					kp.getPlayer().getWorld().getName(),
+					kp.getPlayer().getTargetBlock(null, 10).getLocation());
+		} else if (args[1].equalsIgnoreCase("list"))
+		{
+			for (Location loc : kp.getLaunchpad().getLaunchpads())
+			{
+				plugin.getLog().sendPlayerNormal(
+						kp.getPlayer(),
+						"[" + loc.getBlockX() + ", " + loc.getBlockY() + ", "
+								+ loc.getBlockZ() + "]");
+			}
+		}
+
+	}
+
 	// ###################################################################################################################################
 	private RootCommand getRootCommand(String command) {
 		RootCommand retval = null;
@@ -193,6 +258,9 @@ public class KatoaCommandExecutor implements CommandExecutor
 			plugin.getLog().sendPlayerWarn(player,
 					"Usage: /kaota paint [clay/wool/stop/radius]");
 			break;
+		case launchpad:
+			plugin.getLog().sendPlayerWarn(player,
+					"Usage: /katoa launchpad [add/remove/list]");
 		}
 	}
 	// ###################################################################################################################################

@@ -15,10 +15,10 @@ public class KatoaPlayerManager
 	}
 
 	public static KatoaPlayer getKatoaPlayer(String username) {
-		for (KatoaPlayer k : players)
+		for (KatoaPlayer kp : players)
 		{
-			if (k.getName().equals(username))
-				return k;
+			if (kp.getName().equals(username))
+				return kp;
 		}
 		return null;
 	}

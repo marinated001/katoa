@@ -52,4 +52,10 @@ public class KatoaLogHandler
 		player.sendMessage(this.buildStringPlayer(message, ChatColor.YELLOW));
 	}
 
+	// Permission warning message to player
+	public void sendPlayerWarnPerm(Player player) {
+		player.sendMessage(this.buildStringPlayer("You don't have permission!",
+				ChatColor.RED));
+	}
+
 }

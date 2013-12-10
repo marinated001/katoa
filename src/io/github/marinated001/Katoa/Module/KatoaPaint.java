@@ -23,6 +23,10 @@ public class KatoaPaint
 	private Server						server			= Bukkit.getServer();
 	private HashMap<Location, Material>	blocksChanged	= new HashMap<Location, Material>();
 
+	public static enum PaintMode {
+		clay, wool
+	}
+
 	public KatoaPaint(KatoaPlayer p) {
 		this.kp = p;
 	}
